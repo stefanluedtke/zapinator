@@ -12,59 +12,16 @@
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-	<script>
-	
-	<!-- Hilfsfunktion zur Cookieverarbeitung -->
-	function getCookie(cname) {
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0; i<ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1);
-        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-    }
-    return "";
-	} 
-	
-	<!-- Cookie mit uid setzen, wenn noch nicht vorhanden. Sonst vorhandenes Cookie nehmen -->
-	if(document.cookie === ""){
-		uid = new Date().getTime();
-		document.cookie = "uid="+uid;
-		$.get("/?heartbeat:"+uid, function(data){
-		$("#nrusers").text(data);
-		});
-	}else{
-		uid=getCookie("uid");
-		$.get("/?heartbeat:"+uid, function(data){
-		$("#nrusers").text(data);
-		});
-	}
-	
-	<!-- Button Werbung startet -->
-	$(document).ready(function(){
-    $("#button_adover").click(function(){
-        $.get("/?button_adover:"+uid, function(data){
-			if(data=="adover"){
-				$("#adover").text("Ja");
-				<!--TODO jetzt buttons auswechseln, andere funktionalitaet-->
-			}
-			});
-	});
-	});
-	<!-- alle 60s Heartbeat senden -->
-	setInterval(function(){ $.get("/?heartbeat:"+uid, function(data){$("#nrusers").text(data); })}, 60000);
 
-	</script>
+	
+	
   </head>
   <body>
 
 	
-	<button type="button" class="btn btn-success" id=button_adover>Werbung vorbei</button> 
-	<p>
-	Ist die Mehrheit der User der Meinung, dass die Werbung vorbei ist: <div id=adover>Nein.</div>
-	<p>
-	aktive User: <div id=nrusers></div>
-
+	<a href=detail.html/?{"stationpage":"ARD"} alt=ard>ARD</a><br>
+	<a href=detail.html/?{"stationpage":"ZDF"} alt=zdf>ZDF</a><br>
+	<a href=detail.html/?{"stationpage":"RTL"} alt=rtl>RTL</a>
 
 
 	

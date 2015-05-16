@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>|{station}</title>
+
+    <!-- Bootstrap -->
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script>
+	
+	<!-- Hilfsfunktion zur Cookieverarbeitung -->
+	function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0; i<ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1);
+        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+    }
+    return "";
+	} 
+	
+	<!-- Cookie mit uid setzen, wenn noch nicht vorhanden. Sonst vorhandenes Cookie nehmen -->
+	if(document.cookie === ""){
+		uid = new Date().getTime();
+		document.cookie = "uid="+uid;
+		hb={"type":"heartbeat","uid":uid,"station":"|{station}"};
+		$.get("/?"+JSON.stringify(hb), function(data){
+		$("#nrusers").text(data);
+		});
+	}else{
+		uid=getCookie("uid");
+		hb={"type":"heartbeat","uid":uid,"station":"|{station}"};
+		$.get("/?"+JSON.stringify(hb), function(data){
+		$("#nrusers").text(data);
+		});
+	}
+	
+	<!-- Button Werbung startet -->
+	$(document).ready(function(){
+    $("#button_adover").click(function(){
+		dat={"type":"adover","uid":uid,"station":"|{station}"}
+        $.get("/?"+JSON.stringify(dat), function(data){
+			dat= eval ("(" + data + ")");
+			if(dat.adover==="true"){
+				$("#adover").text("Ja");
+				<!--TODO jetzt buttons auswechseln, andere funktionalitaet-->
+			}
+			});
+	});
+	});
+	<!-- alle 60s Heartbeat senden -->
+	hb={"type":"heartbeat","uid":uid,"station":"|{station}"};
+	setInterval(function(){ $.get("/?"+JSON.stringify(hb), function(data){$("#nrusers").text(data); })}, 60000);
+
+	</script>
+  </head>
+  <body>
+
+	<h1>|{station}</h1>
+	
+	<button type="button" class="btn btn-success" id=button_adover>Werbung vorbei</button> 
+	<p>
+	Ist die Mehrheit der User der Meinung, dass die Werbung vorbei ist: <div id=adover>Nein.</div>
+	<p>
+	aktive User: <div id=nrusers></div>
+
+
+
+	
+  </body>
+</html>
