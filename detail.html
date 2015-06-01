@@ -42,19 +42,61 @@
 		});
 	}
 	
-	<!-- Button Werbung startet -->
+	
+	<!-- TODO wenn seite geladen, 1x abfragen wie aktueller Werbestand ist, in Variablen merken. Diese Variable aendern, wenn Werbung sich aendert>
+	werbung=false;
+		$(document).ready(function(){
+		dat={"type":"adstatus","station":"|{station}"}
+        $.get("/?"+JSON.stringify(dat), function(data){
+			dat= eval ("(" + data + ")");
+			if(dat.ad==="true"){
+				
+				document.getElementById("button_adover").style.display="inline";
+				document.getElementById("button_adstarts").style.display="none";
+				werbung=true;
+			}else{
+				
+				document.getElementById("button_adover").style.display="none";
+				document.getElementById("button_adstarts").style.display="inline";
+				werbung=false;
+			}
+			});
+	});
+
+	
+	<!--Button Werbung startet-->
+	$(document).ready(function(){
+    $("#button_adstarts").click(function(){
+		dat={"type":"adstarts","uid":uid,"station":"|{station}"}
+        $.get("/?"+JSON.stringify(dat), function(data){
+			dat= eval ("(" + data + ")");
+			if(dat.adstarts==="true"){
+			$("#adover").text("Ja");
+				<!-- jetzt buttons auswechseln, andere funktionalitaet-->
+				document.getElementById("button_adover").style.display="inline";
+				document.getElementById("button_adstarts").style.display="none";
+			}
+			});
+	});
+	});
+	
+	<!-- Button Werbung vorbei -->
 	$(document).ready(function(){
     $("#button_adover").click(function(){
 		dat={"type":"adover","uid":uid,"station":"|{station}"}
         $.get("/?"+JSON.stringify(dat), function(data){
 			dat= eval ("(" + data + ")");
 			if(dat.adover==="true"){
-				$("#adover").text("Ja");
-				<!--TODO jetzt buttons auswechseln, andere funktionalitaet-->
+				$("#adover").text("Nein");
+				<!-- jetzt buttons auswechseln, andere funktionalitaet-->
+				document.getElementById("button_adover").style.display="none";
+				document.getElementById("button_adstarts").style.display="inline";
 			}
 			});
 	});
 	});
+	
+	
 	<!-- alle 60s Heartbeat senden -->
 	hb={"type":"heartbeat","uid":uid,"station":"|{station}"};
 	setInterval(function(){ $.get("/?"+JSON.stringify(hb), function(data){$("#nrusers").text(data); })}, 60000);
@@ -65,9 +107,10 @@
 
 	<h1>|{station}</h1>
 	
-	<button type="button" class="btn btn-success" id=button_adover>Werbung vorbei</button> 
+	<button type="button" class="btn btn-success" id=button_adstarts>Werbung startet</button>
+	<button type="button" class="btn btn-success" id=button_adover>Werbung vorbei</button>
 	<p>
-	Ist die Mehrheit der User der Meinung, dass die Werbung vorbei ist: <div id=adover>Nein.</div>
+	Es ist Werbung: <div id=adover>Nein.</div>
 	<p>
 	aktive User: <div id=nrusers></div>
 

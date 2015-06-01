@@ -10,6 +10,8 @@ import urllib.parse
 users={}
 #dictionary der user, die den button "werbung vorbei" gedrueckt haben
 adoverusers={}
+adstartsusers={}
+isad=False
 
 class MyTemplate(Template):
     delimiter="|"
@@ -32,6 +34,7 @@ def simple_app(environ, start_response):
         answer=template.substitute(station=stname)
         start_response('200 OK', [])
         return [answer.encode('utf-8')]
+    #wenn Datenuebertragung vom client: entweder heartbeat oder adover
     elif environ["QUERY_STRING"].startswith("{"):
         print("HIER1")
         qstring=urllib.parse.unquote(environ["QUERY_STRING"])
@@ -41,6 +44,10 @@ def simple_app(environ, start_response):
             return handle_heartbeat(query["uid"],query["station"],start_response)
         elif query["type"]=="adover":
             return handle_adover(query["uid"],query["station"],start_response)
+        elif query["type"]=="adstarts":
+            return handle_adstarts(query["uid"],query["station"],start_response)
+        elif query["type"]=="adstatus":
+            return handle_adstatus(start_response)
     #wenn query-string leer:
     #wenn / angefragt: index.html liefern
     elif environ["PATH_INFO"] == "/" and environ["QUERY_STRING"] == "":
@@ -64,31 +71,57 @@ def handle_heartbeat(uid,station,start_response):
     # vorhandener wert an stelle uid mit True ueberschrieben
     users.update({uid:True})
     start_response('200 OK', [])
-    print("Heartbeat von "+uid)
+    print("Heartbeat von "+str(uid))
     return [str(len(users)).encode('utf-8')]
 
 def handle_adover(uid,station,start_response):
     global adoverusers
+    global isad
     # wenn uid noch nicht in adoverusers: neu hinzu, sonst wird einfach
     # vorhandener wert ueberschrieben
     adoverusers.update({uid:True})
     #testen, ob Mehrheit Button Werbung vorbei gedrueckt hat
-    if len(adoverusers)>1/2*len(users):
+    if len(adoverusers)>=1/2*len(users):
         response="true"
         #Werbung vorbei, adoverusers loeschen
         adoverusers={}
+        isad=False
     else:
         response="false"
     answer={"adover":response}
     start_response('200 OK', [])
     print("Werbung vorbei bei "+uid)
+    #antwort adover:true oder adover:false senden
     return [str(answer).encode('UTF-8')]
 
-    
-#Server erzeugen, der die Methode simple_app zur Beantwortung von Anfragen verwendet
-httpd = make_server('', 8000, simple_app)
-print("Serving HTTP on port 8000...")
+def handle_adstarts(uid,station,start_response):
+    global adstartsusers
+    global isad
+    # wenn uid noch nicht in adoverusers: neu hinzu, sonst wird einfach
+    # vorhandener wert ueberschrieben
+    adstartsusers.update({uid:True})
+    #testen, ob Mehrheit Button Werbung vorbei gedrueckt hat
+    if len(adstartsusers)>=1/2*len(users):
+        response="true"
+        #Werbung faengt an, adstartsusers loeschen
+        adoverusers={}
+        isad=True
+    else:
+        response="false"
+    answer={"adstarts":response}
+    start_response('200 OK', [])
+    print("Werbung startet bei "+uid)
+    #antwort adstarts:true oder adstarts:false senden
+    return [str(answer).encode('UTF-8')]
 
+def handle_adstatus(start_response):
+    start_response('200 OK', [])
+    if isad==True:
+        return [str({"ad": "true"}).encode('UTF-8')]
+    else:
+        return [str({"ad": "false"}).encode('UTF-8')]
+
+    
 #Thread, der alle 2 min im users-dictionary aufraemt (alle user entfernen,
 #von denen dann noch kein heartbeat erhalten wurde
 def cleanupusers():
@@ -103,10 +136,13 @@ def cleanupusers():
             else:
                 del newusers[uid]
         users=newusers
-            
+
+
+#----------------------MAIN----------------------
+#Server erzeugen, der die Methode simple_app zur Beantwortung von Anfragen verwendet
+httpd = make_server('', 8000, simple_app)
+print("Serving HTTP on port 8000...")
+#Aufraeum-Thread starten
 start_new_thread(cleanupusers,())
-
-
-
 # Beantworte dauerhaft Anfragen
 httpd.serve_forever()
